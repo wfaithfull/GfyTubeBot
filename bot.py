@@ -18,7 +18,9 @@ def find(pattern, comment):
 def make_gfy(youtube_url, hours, minutes, seconds, length):
     url_params = urlencode({'fetchUrl':youtube_url, 'fetchHours':hours, 'fetchMinutes':minutes, 'fetchSeconds':seconds, 'fetchLength':length})
     key = ''.join(random.choice(string.ascii_uppercase) for _ in range(10))
-    response = urlopen('https://upload.gfycat.com/transcode/{0}?/{1}'.format(key, url_params))
+    request_url = 'https://upload.gfycat.com/transcode/{0}?/{1}'.format(key, url_params);
+    print('Making request -> {0}'.format(request_url))
+    response = urlopen(request_url)
     json_response = json.loads(response.read().decode('utf-8'))
     success = 'gfyName' in json_response
     if success:
