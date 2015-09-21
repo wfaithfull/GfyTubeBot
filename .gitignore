@@ -55,3 +55,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# OAuth juicy details, DONT COMMIT YOUR API KEYS TO PUBLIC REPOS PEOPLE
+oauth.ini
