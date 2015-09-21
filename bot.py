@@ -68,9 +68,9 @@ def main():
                         print('Failed to create gfy')
                         mention.reply('''The gfycat API didn\'t like that :( 
                         
-                        > {0}
+                        {0}
                         
-                        Check [here](https://upload.gfycat.com/status/{1}) for status
+                        Check here: https://upload.gfycat.com/status/{1} for status
                         '''.format(gfyUrl, key))
                     else:
                         mention.reply('[Here\'s your Gfy]({0})'.format(gfyUrl))
