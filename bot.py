@@ -5,6 +5,8 @@ from time import sleep
 from urllib.request import urlopen
 from urllib.parse import urlencode
 import json
+import random
+import string
 
 def find(pattern, comment):
     m = re.search(pattern, comment)
@@ -15,9 +17,19 @@ def find(pattern, comment):
 
 def make_gfy(youtube_url, hours, minutes, seconds, length):
     url_params = urlencode({'fetchUrl':youtube_url, 'fetchHours':hours, 'fetchMinutes':minutes, 'fetchSeconds':seconds, 'fetchLength':length})
-    response = urlopen('https://upload.gfycat.com/transcodeRelease/GfyTubeBot?' + url_params)
+    key = ''.join(random.choice(string.ascii_uppercase) for _ in range(10))
+    response = urlopen('https://upload.gfycat.com/transcode/{0}?/{1}'.format(key, url_params))
     json_response = json.loads(response.read().decode('utf-8'))
-    return 'http://gfycat.com/' + json_response['gfyName']
+    success = 'gfyName' in json_response
+    if success:
+        url = 'http://gfycat.com/' + json_response['gfyName']
+    else:
+        print(json_response)
+        if 'error' in json_response:
+            url = json_response['error']
+        else:
+            url = ''
+    return (success, url, key)
 
 def main():
     user_agent = ("Youtube to Gfy converter")
@@ -39,28 +51,40 @@ def main():
                 haveTime, time = find('([0-9]|0[0-9]|1[0-9]|2[0-3]):([0-9]|[0-5][0-9]):([0-9]|[0-5][0-9])',body)
                 haveSecs, secs = find('(^|[ ])[0-9]{1,}(?!:)',body)
 
-                print(haveUrl, haveTime, haveSecs)
+               
 
                 if haveUrl and haveTime and haveSecs:
+                    
+                    print('Doing {0}\'s bidding...'.format(mention.author.name))
+                
                     t = time.split(':')
-                    gfyUrl = make_gfy(url, t[0], t[1], t[2], secs);
-                    print('Gfy created! ' + gfyUrl)
-                    mention.reply('[Here\'s your Gfy](' + gfyUrl + ')')
+                    if int(t[2]) > 15 or int(t[2]) < 1:
+                        continue
+                        
+                    success, gfyUrl, key = make_gfy(url, t[0], t[1], t[2], secs);
+                    if not success:
+                        print('Failed to create gfy')
+                        mention.reply('''The gfycat API didn\'t like that :( 
+                        
+                        > {0}
+                        
+                        Check [here](https://upload.gfycat.com/status/{1}) for status
+                        '''.format(gfyUrl, key))
+                    else:
+                        mention.reply('[Here\'s your Gfy]({0})'.format(gfyUrl))
             except praw.errors.RateLimitExceeded as e:
-                log(e)
+                print(e)
                 sleep(e.sleep_time)
             except praw.errors.HTTPException as e:
                 if '403' in str(e):
-                    log('Encountered 403 forbidden. No point continuing. "{error}"'.format(error=e))
+                    print('Encountered 403 forbidden. No point continuing. "{error}"'.format(error=e))
                     return
             except praw.errors.APIException as e:
-                log(e)
-            except SocketError as e:
-                log(e)
+                print(e)
             finally:
                 mention.mark_as_read()
 
-        sleep(10)
+        sleep(30)
         
 if __name__ == "__main__":
     main()
